@@ -1,0 +1,108 @@
+---
+title: "Housing Proj"
+author: "Dylan Scott & Onyeka"
+date: "4/3/2021"
+output: html_document
+---
+
+```{R Data read-in}
+#Load required libraries
+library(tidyverse)
+library(ggplot2)
+library(olsrr)
+library(GGally)
+library(caret)
+library(MASS)
+library(leaps)
+
+ames_housing <- read.csv("https://raw.githubusercontent.com/scottdyl/MSDS_6371_Housing_Proj/main/data/train.csv", header = T)
+
+#data head
+head(ames_housing)
+
+```
+### Analysis 1:
+```{R Analysis 1 identify outliers}
+# neighborhoods used: NAmes, Edwards, BrkSide
+# is sales price related to GrLIvArea and is it depedent on neighborhood
+# provide an estimate by neighborhood and confidence interval
+# be sure to address assumptions and outliers
+
+# filtering neighborhoods and select only the price, living area, neighborhood
+century_ames<- ames_housing %>%
+    filter(Neighborhood=="NAmes"|Neighborhood=="Edwards"|Neighborhood=="BrkSide")%>%
+    dplyr::select(SalePrice,GrLivArea,Neighborhood)
+# convert neighborhood to a factor
+century_ames$neighborFactor<-as.factor(century_ames$Neighborhood)
+# plot sales price vs squarefoot
+century_ames %>% 
+  ggplot(aes(x=GrLivArea,y=SalePrice))+
+  geom_point()+
+  ggtitle("Sale Price vs. Living Area Sq Ft")+
+  xlab("Living Area Sq Ft")+
+  ylab("Sale Price")
+# raw model without dealing with outliers
+fit1 = lm(SalePrice~GrLivArea,data=century_ames)
+summary(fit1)
+#Look at residual plots and cook's distance
+plot(fit1)
+cooksDistance = data.frame(distance = cooks.distance(fit1))
+cooksDistance%>%filter(distance>=1)
+ols_plot_cooksd_bar(fit1)
+ols_plot_resid_stand(fit1)
+# output: we had two observations with high cook's D observation 339 and observation 131 had a distance of 5.6 and 1.04 respectively. This is no surprise looking at the original scatter plot we did see some points of interest
+# when looking at the standardized residual we see points 169 and 190 both boast a residual greater than 3. These points show evidence of a possible error. However, we have a large enough sample size where we are confident enough to remove these 4 abnormal points.
+
+```
+
+```{R Analysis 1 remove outliers no categorical varables}
+# century_ames2 now without outliers!
+century_ames2 = century_ames[-c(131,169,190,339),]
+# building new plot without outtliers
+century_ames2 %>% 
+  ggplot(aes(x=GrLivArea,y=SalePrice))+
+  geom_point()+
+  ggtitle("Sale Price vs. Living Area Sq Ft")+
+  xlab("Living Area Sq Ft")+
+  ylab("Sale Price")
+#build new model to ensure the removal of the prevous points didn't overfit
+fit2 = lm(SalePrice~GrLivArea,data=century_ames2)
+summary(fit2)
+plot(fit2)
+ols_plot_cooksd_bar(fit2)
+ols_plot_resid_stand(fit2)
+# overall, much better looking residual plots. All points fall within 3.1 units on the residual plot
+
+
+```
+
+```{R Analysis 1 adding categorical varables}
+# adding categorical variables into the model
+fit3 = lm(SalePrice~GrLivArea+neighborFactor+GrLivArea*neighborFactor,data=century_ames2)
+century_ames2 %>% 
+  ggplot(aes(x=GrLivArea,y=SalePrice,color=neighborFactor))+
+  geom_point()+ggtitle("Sale Price vs. Living Area Sq Ft")+
+  xlab("Living Area Sq Ft")+
+  ylab("Sale Price")
+
+summary(fit3)
+plot(fit3)
+ols_plot_cooksd_bar(fit3)
+ols_plot_resid_stand(fit3)
+anova(fit3)
+confint(fit3)
+
+# CI Edwards
+century_ames2$neighborFactor = relevel(century_ames2$neighborFactor,ref="Edwards")
+fit3 = lm(SalePrice~GrLivArea+neighborFactor+GrLivArea*neighborFactor,data=century_ames2)
+summary(fit3)
+confint(fit3)
+
+# CI NAmes
+century_ames2$neighborFactor = relevel(century_ames2$neighborFactor,ref="NAmes")
+fit3 = lm(SalePrice~GrLivArea+neighborFactor+GrLivArea*neighborFactor,data=century_ames2)
+summary(fit3)
+confint(fit3)
+
+
+```
