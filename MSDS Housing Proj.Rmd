@@ -20,6 +20,34 @@ ames_housing <- read.csv("https://raw.githubusercontent.com/scottdyl/MSDS_6371_H
 #data head
 head(ames_housing)
 
+#Load in test.csv
+testData = read.csv("https://raw.githubusercontent.com/scottdyl/MSDS_6371_Housing_Proj/main/data/test.csv",header = TRUE)
+#Convert variables from N/A to null
+testData$MasVnrArea = ifelse(is.na(testData$MasVnrArea),0,testData$MasVnrArea)
+testData$TotalBsmtSF = ifelse(is.na(testData$TotalBsmtSF),0,testData$TotalBsmtSF)
+testData$GarageCars = ifelse(is.na(testData$GarageCars),0,testData$GarageCars)
+testData$MSZoning = ifelse(is.na(testData$MSZoning),"RL",testData$MSZoning)
+testData$KitchenQual = ifelse(is.na(testData$KitchenQual),"TA",testData$KitchenQual)
+testData$MSSubClass = ifelse(testData$MSSubClass==150,180,testData$MSSubClass)
+testData$FullBath = ifelse(testData$FullBath==4,3,testData$FullBath)
+testData$Fireplaces = ifelse(testData$Fireplaces==4,3,testData$Fireplaces)
+
+testData$BsmtQual = ifelse(is.na(testData$BsmtQual),"NONE",testData$BsmtQual)
+testData$BsmtCond = ifelse(is.na(testData$BsmtCond),"NONE",testData$BsmtCond)
+testData$GarageType = ifelse(is.na(testData$GarageType),"NONE",testData$GarageType)
+#Convert some variables we need into factor
+testData[cols.to.factor] = lapply(testData[cols.to.factor],factor)
+#create variable PoolYN
+testData$PoolYN = ifelse(is.na(testData$PoolQC),"NO","YES")
+testData$PoolYN = as.factor(testData$PoolYN)
+#select variables needed for testing
+testVariable = testData %>% 
+  dplyr::select(Id,MSSubClass,MSZoning,LotArea,LotConfig,Neighborhood,HouseStyle,
+         OverallQual,OverallCond,YearBuilt,YearRemodAdd,MasVnrArea,ExterQual,
+         ExterCond,Foundation,BsmtQual,BsmtCond,TotalBsmtSF,
+         Heating,CentralAir,X1stFlrSF,GrLivArea,FullBath,KitchenQual,TotRmsAbvGrd,
+         Fireplaces,GarageType,GarageCars,PoolYN,MoSold,YrSold)
+
 ```
 ### Analysis 1:
 ```{R Analysis 1 identify outliers}
@@ -165,9 +193,31 @@ ames_housing %>% dplyr::select(logSalesPrice,WoodDeckSF,OpenPorchSF,EnclosedPorc
 
 ```{R selecting varialbes}
 
-
+ames_housing$PoolYN = ifelse(is.na(ames_housing$PoolQC),"NO","YES")
+ames_housing$PoolYN = as.factor(ames_housing$PoolYN)
+variables.used = ames_housing %>% 
+  dplyr::select(Id,MSSubClass,MSZoning,LotArea,LotConfig,Neighborhood,HouseStyle,
+         OverallQual,OverallCond,YearBuilt,YearRemodAdd,MasVnrArea,ExterQual,
+         ExterCond,Foundation,BsmtQual,BsmtCond,TotalBsmtSF,
+         Heating,CentralAir,X1stFlrSF,GrLivArea,FullBath,KitchenQual,TotRmsAbvGrd,
+         Fireplaces,GarageType,GarageCars,PoolYN,MoSold,YrSold,logSalesPrice)
+summary(variables.used)
+#Adjusting MasVnrArea
+variables.used$MasVnrArea = ifelse(is.na(variables.used$MasVnrArea),0,variables.used$MasVnrArea)
+variables.used$BsmtQual = as.character(variables.used$BsmtQual)
+variables.used$BsmtQual = ifelse(is.na(variables.used$BsmtQual),"NONE",variables.used$BsmtQual)
+variables.used$BsmtQual = as.factor(variables.used$BsmtQual)
+#Adjusting BsmtCond
+variables.used$BsmtCond = as.character(variables.used$BsmtCond)
+variables.used$BsmtCond = ifelse(is.na(variables.used$BsmtCond),"NONE",variables.used$BsmtCond)
+variables.used$BsmtCond = as.factor(variables.used$BsmtCond)
+#Adjusting GarageType
+variables.used$GarageType = as.character(variables.used$GarageType)
+variables.used$GarageType = ifelse(is.na(variables.used$GarageType),"NONE",variables.used$GarageType)
+variables.used$GarageType = as.factor(variables.used$GarageType)
 
 ```
+
 
 ```{R Setpwise}
 
