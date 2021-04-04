@@ -106,3 +106,83 @@ confint(fit3)
 
 
 ```
+### Analysis 2 4 model breakdown
+```{R Analysis 2 checking assumptions and data transformation}
+# let's experiment I will be breaking down the varibles into batches because ggpairs is a bit cumbersom 
+# start with converting many of the columns to factors so we can test corrliation and impact
+cols.to.factor = c("MSSubClass","MSZoning","Street","Alley","LotShape","LandContour","Utilities",
+                   "LotConfig","LandSlope","Neighborhood","Condition1","Condition2","BldgType",
+                   "HouseStyle","OverallQual","OverallCond","RoofStyle","RoofMatl","Exterior1st",
+                   "Exterior2nd","MasVnrType","ExterQual","ExterCond","Foundation","BsmtQual",
+                   "BsmtCond","BsmtExposure","BsmtFinType1","BsmtFinType2","Heating","HeatingQC",
+                   "CentralAir","Electrical","KitchenQual","Functional","FireplaceQu","GarageType",
+                   "GarageFinish","GarageQual","GarageCond","PavedDrive","PoolQC","Fence","MiscFeature",
+                   "SaleType","SaleCondition","PoolArea","MoSold","YrSold","Fireplaces","FullBath")
+ames_housing[cols.to.factor] = lapply(ames_housing[cols.to.factor],factor)
+# ggpairs lets us see the relationship and plots the data
+# first set of cat varables
+ames_housing %>% dplyr::select(SalePrice,LotFrontage,LotArea,YearBuilt,YearRemodAdd,MasVnrArea,BsmtFinSF1,BsmtFinSF2)%>%
+  ggpairs()
+ames_housing$logSalesPrice = log(ames_housing$SalePrice)
+# pairs but with log of sales price
+ames_housing %>% dplyr::select(logSalesPrice,LotFrontage,LotArea,YearBuilt,YearRemodAdd,MasVnrArea,BsmtFinSF1,BsmtFinSF2)%>%
+  ggpairs()
+#There seem to have a slight improvement between YearBuilt and YearRemodAdd
+
+# second set of cat varables
+ames_housing %>% dplyr::select(SalePrice,BsmtUnfSF,TotalBsmtSF,X1stFlrSF,X2ndFlrSF,LowQualFinSF,GrLivArea) %>%
+  ggpairs()
+# log of sales price vs other catetgorical varales
+ames_housing %>% dplyr::select(logSalesPrice,BsmtUnfSF,TotalBsmtSF,X1stFlrSF,X2ndFlrSF,LowQualFinSF,GrLivArea) %>%
+  ggpairs()
+# logSalesPrice vs TotalBsmtSF, X1stFlrSF, X2ndFlrSF,GrLivArea seems to be better
+# looks like a log transformation is needed
+
+# third set of cat varables 
+ames_housing %>% dplyr::select(SalePrice,BsmtFullBath,BsmtHalfBath,HalfBath,BedroomAbvGr,KitchenAbvGr,
+                     TotRmsAbvGrd)%>%
+  ggpairs()
+ames_housing %>% dplyr::select(logSalesPrice,BsmtFullBath,BsmtHalfBath,HalfBath,BedroomAbvGr,KitchenAbvGr,
+                     TotRmsAbvGrd)%>%
+  ggpairs()
+
+# best corrl so far is: logSalesPrice is FullBath,TotRmsAbvGrd.
+
+# fourth set of varables
+ames_housing %>% dplyr::select(SalePrice,GarageYrBlt,GarageCars,GarageArea) %>% ggpairs()
+ames_housing %>% dplyr::select(logSalesPrice,GarageYrBlt,GarageCars,GarageArea) %>% ggpairs()
+# once again log seems to show the best relationship
+# fith set of varables (last)
+ames_housing %>% dplyr::select(SalePrice,WoodDeckSF,OpenPorchSF,EnclosedPorch,X3SsnPorch,ScreenPorch,MiscVal)%>%
+  ggpairs()
+ames_housing %>% dplyr::select(logSalesPrice,WoodDeckSF,OpenPorchSF,EnclosedPorch,X3SsnPorch,ScreenPorch,MiscVal)%>%
+  ggpairs()
+# WoodDeckSF and OpenPorchSF showed the most promise
+# overall Log of sales price seemed to improve the most. we will use that going forward
+
+```
+
+
+```{R selecting varialbes}
+
+
+
+```
+
+```{R Setpwise}
+
+```
+
+```{R Forward Selection}
+
+
+```
+
+
+```{R Backwards Selection}
+
+```
+
+```{R Custom}
+
+```
